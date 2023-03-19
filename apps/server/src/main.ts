@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import { generateDocs } from "./config/docs";
@@ -5,11 +6,13 @@ import { powerRangerController } from "./modules/power-ranger/power-ranger.route
 
 const app = express();
 
+app.use(cors(), express.json(), express.urlencoded({ extended: true }));
+
 app.use(powerRangerController.options.basePath, powerRangerController.router);
 
 const docs = generateDocs();
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(docs));
-app.get("/api-spec", (_, res) => {
+app.get("/api-spec.json", (_, res) => {
   res.setHeader("Content-Type", "application/json");
   res.send(docs);
 });

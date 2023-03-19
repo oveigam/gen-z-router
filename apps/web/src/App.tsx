@@ -1,13 +1,27 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useQuery } from "@tanstack/react-query";
+import reactLogo from "./assets/react.svg";
+import { PowerRangersApi } from "./_api/apis/PowerRangersApi";
+import { Configuration } from "./_api/runtime";
+import viteLogo from "/vite.svg";
+
+const api = new PowerRangersApi(
+  new Configuration({
+    basePath: "http://localhost:8000",
+  })
+);
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { data } = useQuery({
+    queryKey: ["gogopowerrangers"],
+    queryFn: () => {
+      return api.powerRangersGet({});
+    },
+  });
+
+  console.log(data);
 
   return (
-    <div className="App">
+    <div className="container">
       <div>
         <a href="https://vitejs.dev" target="_blank">
           <img src={viteLogo} className="logo" alt="Vite logo" />
@@ -18,18 +32,18 @@ function App() {
       </div>
       <h1>Vite + React</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
+        <ul>
+          {data?.map((p) => (
+            <li key={p.id}>{p.name}</li>
+          ))}
+        </ul>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
