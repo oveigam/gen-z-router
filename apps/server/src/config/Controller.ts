@@ -18,9 +18,10 @@ function preprocess<Def extends { typeName: ZodFirstPartyTypeKind }>(
   def: Def
 ) {
   switch (def.typeName) {
+    // Los esquemas que son opcionales o que tienen un default no necesitan nada especial
+    // ejecutamos el preproceso de nuevo con el esquema interno
+    case ZodFirstPartyTypeKind.ZodDefault:
     case ZodFirstPartyTypeKind.ZodOptional:
-      // Los esquemas que son opcionales no necesitan nada especial
-      // ejecutamos el preproceso de nuevo con el esquema interno
       const optionalDef = def as unknown as ZodOptionalDef;
       preprocess(key, params, optionalDef.innerType._def);
       break;
@@ -180,7 +181,7 @@ function generateSwaggerPath(basePath: string, path: Path) {
 
 function registerDocs(params: {
   path: Path;
-  method: "get" | "post" | "put" | "patch" | "delete";
+  method: Method;
   validation: ValidationSchema<AnyZodObject, AnyZodObject, AnyZodObject, Schema>;
   responseStatus?: number;
   options: ControllerOptions;
@@ -204,6 +205,7 @@ function registerDocs(params: {
     method,
     tags: [options.name],
     path: generateSwaggerPath(options.basePath, path),
+    // operationId: // TODO pasarle o generar el operationId (lo usa el open api client generator para nombrar las funciones),
     security: [{ [openapiAuth.name]: [] }],
     request: {
       ...input,
@@ -239,6 +241,7 @@ function registerSchema(schema: Schema) {
 }
 
 type Path = Exclude<`/${string}`, `${string}/`>;
+type Method = "get" | "post" | "put" | "patch" | "delete";
 
 type ControllerOptions = {
   name: string;

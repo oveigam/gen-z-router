@@ -11,4 +11,4 @@ export const powerRangerSchema = z
       })
       .array(),
   })
-  .openapi({ title: "PorwerRanger", description: "Go Go Power Rangers" });
+  .openapi({ title: "Porwer Ranger", description: "Go Go Power Rangers" });

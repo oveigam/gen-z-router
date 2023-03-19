@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * Gen Z Validation
- * Mejor tipado, menos boilerplate.
+ * Kneel before zod
  *
  * The version of the OpenAPI document: 1.0.0
  * 

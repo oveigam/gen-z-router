@@ -2,7 +2,7 @@
 /* eslint-disable */
 /**
  * Gen Z Validation
- * Mejor tipado, menos boilerplate.
+ * Kneel before zod
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -49,14 +49,10 @@ export class PowerRangersApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            const token = this.configuration.accessToken;
-            const tokenString = await token("bearerAuth", []);
-
-            if (tokenString) {
-                headerParameters["Authorization"] = `Bearer ${tokenString}`;
-            }
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["username"] = this.configuration.apiKey("username"); // username authentication
         }
+
         const response = await this.request({
             path: `/power-rangers/`,
             method: 'GET',
@@ -85,14 +81,10 @@ export class PowerRangersApi extends runtime.BaseAPI {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
-        if (this.configuration && this.configuration.accessToken) {
-            const token = this.configuration.accessToken;
-            const tokenString = await token("bearerAuth", []);
-
-            if (tokenString) {
-                headerParameters["Authorization"] = `Bearer ${tokenString}`;
-            }
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["username"] = this.configuration.apiKey("username"); // username authentication
         }
+
         const response = await this.request({
             path: `/power-rangers/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters.id))),
             method: 'GET',
