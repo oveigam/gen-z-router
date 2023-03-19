@@ -5,8 +5,6 @@ import { powerRangerSchema } from "./power-ranger.validation";
 
 export const powerRangerController = new Controller({ name: "Power Rangers", basePath: "/power-rangers" });
 
-const stringToNumberSchema = z.preprocess(Number, z.number());
-
 export const getAllHandler = powerRangerController.get(
   "/",
   {
@@ -23,7 +21,7 @@ export const getAllHandler = powerRangerController.get(
 export const getOneHandler = powerRangerController.get(
   "/:id",
   {
-    params: z.object({ id: stringToNumberSchema }),
+    params: z.object({ id: z.number() }),
     response: powerRangerSchema,
   },
   async ({ params }) => {

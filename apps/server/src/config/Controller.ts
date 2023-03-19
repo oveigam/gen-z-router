@@ -1,20 +1,82 @@
 import { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import { NextFunction, Request, Response, Router } from "express";
-import { AnyZodObject, z, ZodAnyDef, ZodFirstPartyTypeKind, ZodNumberDef, ZodTypeDef, Schema } from "zod";
+import { AnyZodObject, Schema, z, ZodArrayDef, ZodFirstPartyTypeKind, ZodOptionalDef, ZodTypeAny } from "zod";
 import { openapi, openapiAuth } from "./docs";
 
 const IS_DEV = true;
 
-// Abrebiatura, es mu largo el nombre y sale mucho
+// Abreviatura, es mu largo el nombre y sale mucho
 type AZO = AnyZodObject;
 
-// function parseNumber(def: ZodNumberDef) {}
+function parseStringNumber(param: unknown) {
+  return typeof param === "string" ? Number(param) : param;
+}
 
-// function parse(def: ZodAnyDef) {
-//   def.typeName
-//   ZodFirstPartyTypeKind.ZodArray
-//   // parseNumber(def);
-// }
+function parseStringBoolean(param: unknown) {
+  return param === "true" ? true : param === "false" ? false : param;
+}
+
+function preprocess<Def extends { typeName: ZodFirstPartyTypeKind }>(
+  key: string,
+  params: Record<string, unknown>,
+  def: Def
+) {
+  switch (def.typeName) {
+    case ZodFirstPartyTypeKind.ZodOptional:
+      // Los esquemas que son opcionales no necesitan nada especial
+      // ejecutamos el preproceso de nuevo con el esquema interno
+      const optionalDef = def as unknown as ZodOptionalDef;
+      preprocess(key, params, optionalDef.innerType._def);
+      break;
+
+    case ZodFirstPartyTypeKind.ZodArray:
+      const arrDef = def as unknown as ZodArrayDef;
+      const param = params[key];
+      if (Array.isArray(param)) {
+        // Los arrays se mapean segun el tipo del esquema
+        if (arrDef.type._def.typeName === ZodFirstPartyTypeKind.ZodNumber) {
+          params[key] = param.map(parseStringNumber);
+        } else if (arrDef.type._def.typeName === ZodFirstPartyTypeKind.ZodBoolean) {
+          params[key] = param.map(parseStringBoolean);
+        }
+      } else {
+        // Si estamos procesando un array que vienen en la query de la consulta hay
+        // que tener en cuenta que si solo tiene un elemento no llegará como array
+        // si no que llegará como un elemento único
+        if (arrDef.type._def.typeName === ZodFirstPartyTypeKind.ZodNumber) {
+          params[key] = [parseStringNumber(param)];
+        } else if (arrDef.type._def.typeName === ZodFirstPartyTypeKind.ZodBoolean) {
+          params[key] = [parseStringBoolean(param)];
+        }
+      }
+      preprocess(key, params, arrDef.type._def);
+      break;
+
+    case ZodFirstPartyTypeKind.ZodNumber:
+      params[key] = parseStringNumber(params[key]);
+      break;
+
+    case ZodFirstPartyTypeKind.ZodBoolean:
+      params[key] = parseStringBoolean(params[key]);
+      break;
+
+    default:
+      break;
+  }
+}
+
+function parseFromPathOrQuery<P extends AZO>(params: Record<string, unknown>, schema: P) {
+  const def = schema._def;
+
+  if (def.typeName === ZodFirstPartyTypeKind.ZodObject) {
+    const shape = def.shape() as Record<string, ZodTypeAny>;
+    for (const key in shape) {
+      preprocess(key, params, shape[key]._def);
+    }
+  }
+
+  return schema.parse(params);
+}
 
 type ValidationSchema<P extends AZO, Q extends AZO, B extends AZO, R extends Schema> = {
   params?: P;
@@ -36,19 +98,20 @@ function inputMiddleware<P extends AZO, Q extends AZO, B extends AZO, R extends 
 ) {
   return async (req: Request, _: Response, next: NextFunction) => {
     try {
-      const { params, query, body } = validation;
-      if (params) {
-        req.params = params.parse(req.params);
+      const { params: paramsSchema, query: querySchema, body: bodySchema } = validation;
+      if (paramsSchema) {
+        req.params = parseFromPathOrQuery(req.params, paramsSchema);
       }
-      if (query) {
-        req.query = query.parse(req.query);
+      if (querySchema) {
+        req.query = querySchema.parse(req.query);
       }
-      if (body) {
-        req.body = body.parse(req.body);
+      if (bodySchema) {
+        req.body = bodySchema.parse(req.body);
       }
       return next();
     } catch (error) {
       // Customize error if desired
+      console.log("------------------");
       next(error);
     }
   };

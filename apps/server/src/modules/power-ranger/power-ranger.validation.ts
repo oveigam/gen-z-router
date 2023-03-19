@@ -1,4 +1,4 @@
-import { z, Schema } from "zod";
+import { z } from "zod";
 
 export const powerRangerSchema = z.object({
   id: z.number(),
