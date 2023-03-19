@@ -1,5 +1,5 @@
 import cors from "cors";
-import express from "express";
+import express, { Router } from "express";
 import swaggerUi from "swagger-ui-express";
 import { generateDocs } from "./config/docs";
 import { powerRangerController } from "./modules/power-ranger/power-ranger.routes";
@@ -8,7 +8,11 @@ const app = express();
 
 app.use(cors(), express.json(), express.urlencoded({ extended: true }));
 
-app.use(powerRangerController.options.basePath, powerRangerController.router);
+const router = Router();
+
+router.use(powerRangerController.options.basePath, powerRangerController.$router);
+
+app.use(router);
 
 const docs = generateDocs();
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(docs));

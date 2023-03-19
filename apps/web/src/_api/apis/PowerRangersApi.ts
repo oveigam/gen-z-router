@@ -15,13 +15,14 @@
 
 import * as runtime from '../runtime';
 import {
-    InlineResponse200,
-    InlineResponse200FromJSON,
-    InlineResponse200ToJSON,
+    PorwerRanger,
+    PorwerRangerFromJSON,
+    PorwerRangerToJSON,
 } from '../models';
 
 export interface PowerRangersGetRequest {
     name?: string;
+    seasons?: Array<number>;
 }
 
 export interface PowerRangersIdGetRequest {
@@ -35,11 +36,15 @@ export class PowerRangersApi extends runtime.BaseAPI {
 
     /**
      */
-    async powerRangersGetRaw(requestParameters: PowerRangersGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<InlineResponse200>>> {
+    async powerRangersGetRaw(requestParameters: PowerRangersGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<PorwerRanger>>> {
         const queryParameters: any = {};
 
         if (requestParameters.name !== undefined) {
             queryParameters['name'] = requestParameters.name;
+        }
+
+        if (requestParameters.seasons) {
+            queryParameters['seasons'] = requestParameters.seasons;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -59,19 +64,19 @@ export class PowerRangersApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(InlineResponse200FromJSON));
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(PorwerRangerFromJSON));
     }
 
     /**
      */
-    async powerRangersGet(requestParameters: PowerRangersGetRequest, initOverrides?: RequestInit): Promise<Array<InlineResponse200>> {
+    async powerRangersGet(requestParameters: PowerRangersGetRequest, initOverrides?: RequestInit): Promise<Array<PorwerRanger>> {
         const response = await this.powerRangersGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async powerRangersIdGetRaw(requestParameters: PowerRangersIdGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<InlineResponse200>> {
+    async powerRangersIdGetRaw(requestParameters: PowerRangersIdGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<PorwerRanger>> {
         if (requestParameters.id === null || requestParameters.id === undefined) {
             throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling powerRangersIdGet.');
         }
@@ -95,12 +100,12 @@ export class PowerRangersApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => InlineResponse200FromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => PorwerRangerFromJSON(jsonValue));
     }
 
     /**
      */
-    async powerRangersIdGet(requestParameters: PowerRangersIdGetRequest, initOverrides?: RequestInit): Promise<InlineResponse200> {
+    async powerRangersIdGet(requestParameters: PowerRangersIdGetRequest, initOverrides?: RequestInit): Promise<PorwerRanger> {
         const response = await this.powerRangersIdGetRaw(requestParameters, initOverrides);
         return await response.value();
     }

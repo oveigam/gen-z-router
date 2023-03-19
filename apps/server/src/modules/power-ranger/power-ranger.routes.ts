@@ -8,11 +8,13 @@ export const powerRangerController = new Controller({ name: "Power Rangers", bas
 export const getAllHandler = powerRangerController.get(
   "/",
   {
-    query: z.object({ name: z.string().optional() }),
+    query: z.object({ name: z.string().optional(), seasons: z.number().array().optional() }),
     response: powerRangerSchema.array(),
   },
   async ({ query }) => {
-    const { name } = query;
+    const { name, seasons } = query;
+    console.log(seasons);
+
     const data = name ? await db.search(name) : await db.findAll();
     return data;
   }

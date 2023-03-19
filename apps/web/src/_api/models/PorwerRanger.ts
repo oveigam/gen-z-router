@@ -21,36 +21,36 @@ import {
 } from './';
 
 /**
- * 
+ * Go Go Power Rangers
  * @export
- * @interface InlineResponse200
+ * @interface PorwerRanger
  */
-export interface InlineResponse200 {
+export interface PorwerRanger {
     /**
      * 
      * @type {number}
-     * @memberof InlineResponse200
+     * @memberof PorwerRanger
      */
     id: number;
     /**
      * 
      * @type {string}
-     * @memberof InlineResponse200
+     * @memberof PorwerRanger
      */
     name: string;
     /**
      * 
      * @type {Array<PowerRangersSeasons>}
-     * @memberof InlineResponse200
+     * @memberof PorwerRanger
      */
     seasons: Array<PowerRangersSeasons>;
 }
 
-export function InlineResponse200FromJSON(json: any): InlineResponse200 {
-    return InlineResponse200FromJSONTyped(json, false);
+export function PorwerRangerFromJSON(json: any): PorwerRanger {
+    return PorwerRangerFromJSONTyped(json, false);
 }
 
-export function InlineResponse200FromJSONTyped(json: any, ignoreDiscriminator: boolean): InlineResponse200 {
+export function PorwerRangerFromJSONTyped(json: any, ignoreDiscriminator: boolean): PorwerRanger {
     if ((json === undefined) || (json === null)) {
         return json;
     }
@@ -62,7 +62,7 @@ export function InlineResponse200FromJSONTyped(json: any, ignoreDiscriminator: b
     };
 }
 
-export function InlineResponse200ToJSON(value?: InlineResponse200 | null): any {
+export function PorwerRangerToJSON(value?: PorwerRanger | null): any {
     if (value === undefined) {
         return undefined;
     }

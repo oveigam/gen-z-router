@@ -18,8 +18,6 @@ function App() {
     },
   });
 
-  console.log(data);
-
   return (
     <div className="container">
       <div>

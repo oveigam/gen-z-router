@@ -1,12 +1,8 @@
-import { RouteConfig } from "@asteasolutions/zod-to-openapi";
 import { NextFunction, Request, Response, Router } from "express";
 import { AnyZodObject, Schema, z, ZodArrayDef, ZodFirstPartyTypeKind, ZodOptionalDef, ZodTypeAny } from "zod";
 import { openapi, openapiAuth } from "./docs";
 
 const IS_DEV = true;
-
-// Abreviatura, es mu largo el nombre y sale mucho
-type AZO = AnyZodObject;
 
 function parseStringNumber(param: unknown) {
   return typeof param === "string" ? Number(param) : param;
@@ -65,7 +61,7 @@ function preprocess<Def extends { typeName: ZodFirstPartyTypeKind }>(
   }
 }
 
-function parseFromPathOrQuery<P extends AZO>(params: Record<string, unknown>, schema: P) {
+function parseFromPathOrQuery<P extends AnyZodObject>(params: Record<string, unknown>, schema: P) {
   const def = schema._def;
 
   if (def.typeName === ZodFirstPartyTypeKind.ZodObject) {
@@ -78,7 +74,7 @@ function parseFromPathOrQuery<P extends AZO>(params: Record<string, unknown>, sc
   return schema.parse(params);
 }
 
-type ValidationSchema<P extends AZO, Q extends AZO, B extends AZO, R extends Schema> = {
+type ValidationSchema<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema> = {
   params?: P;
   query?: Q;
   body?: B;
@@ -93,7 +89,7 @@ type ValidationSchema<P extends AZO, Q extends AZO, B extends AZO, R extends Sch
  *                      Para los params y la query es necesario usar z.preprocess para convertir los datos ya que siempre vienen como string o string[]
  * @returns
  */
-function inputMiddleware<P extends AZO, Q extends AZO, B extends AZO, R extends Schema>(
+function inputMiddleware<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
   validation: ValidationSchema<P, Q, B, R>
 ) {
   return async (req: Request, _: Response, next: NextFunction) => {
@@ -103,7 +99,7 @@ function inputMiddleware<P extends AZO, Q extends AZO, B extends AZO, R extends 
         req.params = parseFromPathOrQuery(req.params, paramsSchema);
       }
       if (querySchema) {
-        req.query = querySchema.parse(req.query);
+        req.query = parseFromPathOrQuery(req.query, querySchema);
       }
       if (bodySchema) {
         req.body = bodySchema.parse(req.body);
@@ -117,7 +113,7 @@ function inputMiddleware<P extends AZO, Q extends AZO, B extends AZO, R extends 
   };
 }
 
-type Input<P extends AZO, Q extends AZO, B extends AZO> = {
+type Input<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject> = {
   params: z.infer<P>;
   query: z.infer<Q>;
   body: z.infer<B>;
@@ -129,7 +125,7 @@ type Input<P extends AZO, Q extends AZO, B extends AZO> = {
  * @param statusCode Http status code de respuesta
  * @returns Response a la response con los datos retornados del controllerFn
  */
-function createRequestHandler<P extends AZO, Q extends AZO, B extends AZO, R extends Schema>(
+function createRequestHandler<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
   controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>,
   responseValidator: R,
   statusCode = 200
@@ -182,13 +178,13 @@ function generateSwaggerPath(basePath: string, path: Path) {
   return swaggerPath;
 }
 
-function generateEndpointDocs(params: {
+function registerDocs(params: {
   path: Path;
   method: "get" | "post" | "put" | "patch" | "delete";
-  validation: ValidationSchema<AZO, AZO, AZO, Schema>;
+  validation: ValidationSchema<AnyZodObject, AnyZodObject, AnyZodObject, Schema>;
   responseStatus?: number;
   options: ControllerOptions;
-}): RouteConfig {
+}) {
   const {
     path,
     method,
@@ -197,7 +193,14 @@ function generateEndpointDocs(params: {
     options,
   } = params;
 
-  return {
+  // Registro de schemas (solo nos interesan los cuerpos)
+  if (input.body) {
+    registerSchema(input.body);
+  }
+  registerSchema(response);
+
+  // Registro de paths
+  openapi.registerPath({
     method,
     tags: [options.name],
     path: generateSwaggerPath(options.basePath, path),
@@ -225,7 +228,14 @@ function generateEndpointDocs(params: {
       },
       // TODO añadir todas las posibles respuestas de errores (No rights, No auth, etc.)
     },
-  };
+  });
+}
+
+const schemaRegistry = new Map<Schema, boolean>();
+function registerSchema(schema: Schema) {
+  if (!schemaRegistry.get(schema) && schema._def.openapi) {
+    openapi.register("", schema);
+  }
 }
 
 type Path = Exclude<`/${string}`, `${string}/`>;
@@ -236,97 +246,87 @@ type ControllerOptions = {
 };
 
 class Controller {
-  router: Router;
+  $router: Router;
   options: ControllerOptions;
 
   constructor(options: ControllerOptions) {
-    this.router = Router();
+    this.$router = Router();
     this.options = options;
   }
 
-  get<P extends AZO, Q extends AZO, B extends AZO, R extends Schema>(
+  get<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
     path: Path,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
-    openapi.registerPath(
-      generateEndpointDocs({
-        method: "get",
-        options: this.options,
-        path,
-        validation,
-      })
-    );
-    this.router.get(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
+    registerDocs({
+      method: "get",
+      options: this.options,
+      path,
+      validation,
+    });
+    this.$router.get(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
     return controllerFn;
   }
 
-  post<P extends AZO, Q extends AZO, B extends AZO, R extends Schema>(
+  post<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
     path: Path,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
-    openapi.registerPath(
-      generateEndpointDocs({
-        path,
-        method: "post",
-        validation,
-        responseStatus: 201,
-        options: this.options,
-      })
-    );
-    this.router.post(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response, 201));
+    registerDocs({
+      path,
+      method: "post",
+      validation,
+      responseStatus: 201,
+      options: this.options,
+    });
+    this.$router.post(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response, 201));
     return controllerFn;
   }
 
-  put<P extends AZO, Q extends AZO, B extends AZO, R extends Schema>(
+  put<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
     path: Path,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
-    openapi.registerPath(
-      generateEndpointDocs({
-        path,
-        method: "put",
-        validation,
-        options: this.options,
-      })
-    );
-    this.router.put(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
+    registerDocs({
+      path,
+      method: "put",
+      validation,
+      options: this.options,
+    });
+    this.$router.put(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
     return controllerFn;
   }
 
-  patch<P extends AZO, Q extends AZO, B extends AZO, R extends Schema>(
+  patch<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
     path: Path,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
-    openapi.registerPath(
-      generateEndpointDocs({
-        path,
-        method: "patch",
-        validation,
-        options: this.options,
-      })
-    );
-    this.router.patch(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
+    registerDocs({
+      path,
+      method: "patch",
+      validation,
+      options: this.options,
+    });
+    this.$router.patch(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
     return controllerFn;
   }
 
-  delete<P extends AZO, Q extends AZO, B extends AZO, R extends Schema>(
+  delete<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
     path: Path,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
-    openapi.registerPath(
-      generateEndpointDocs({
-        path,
-        method: "delete",
-        validation,
-        options: this.options,
-      })
-    );
-    this.router.delete(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
+    registerDocs({
+      path,
+      method: "delete",
+      validation,
+      options: this.options,
+    });
+    this.$router.delete(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
     return controllerFn;
   }
 }

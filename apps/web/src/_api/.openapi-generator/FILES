@@ -2,7 +2,7 @@
 apis/PowerRangersApi.ts
 apis/index.ts
 index.ts
-models/InlineResponse200.ts
+models/PorwerRanger.ts
 models/PowerRangersSeasons.ts
 models/index.ts
 runtime.ts
