@@ -1,5 +1,14 @@
 import { NextFunction, Request, Response, Router } from "express";
-import { AnyZodObject, Schema, z, ZodArrayDef, ZodFirstPartyTypeKind, ZodOptionalDef, ZodTypeAny } from "zod";
+import {
+  AnyZodObject,
+  Schema,
+  z,
+  ZodArrayDef,
+  ZodDefaultDef,
+  ZodFirstPartyTypeKind,
+  ZodOptionalDef,
+  ZodTypeAny,
+} from "zod";
 import { openapi, openapiAuth } from "./docs";
 
 const IS_DEV = true;
@@ -21,9 +30,14 @@ function preprocess<Def extends { typeName: ZodFirstPartyTypeKind }>(
     // Los esquemas que son opcionales o que tienen un default no necesitan nada especial
     // ejecutamos el preproceso de nuevo con el esquema interno
     case ZodFirstPartyTypeKind.ZodDefault:
+      const defaDef = def as unknown as ZodDefaultDef;
+      preprocess(key, params, defaDef.innerType._def);
+      break;
     case ZodFirstPartyTypeKind.ZodOptional:
-      const optionalDef = def as unknown as ZodOptionalDef;
-      preprocess(key, params, optionalDef.innerType._def);
+      if (params[key] !== undefined) {
+        const optionalDef = def as unknown as ZodOptionalDef;
+        preprocess(key, params, optionalDef.innerType._def);
+      }
       break;
 
     case ZodFirstPartyTypeKind.ZodArray:
