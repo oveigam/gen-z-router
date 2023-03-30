@@ -20,23 +20,23 @@ import {
     PorwerRangerToJSON,
 } from '../models';
 
-export interface PowerRangersGetRequest {
+export interface GetManyPowerRangerRequest {
     name?: string;
     seasons?: Array<number>;
 }
 
-export interface PowerRangersIdGetRequest {
+export interface GetOnePowerRangerRequest {
     id: number;
 }
 
 /**
  * 
  */
-export class PowerRangersApi extends runtime.BaseAPI {
+export class PowerRangerApi extends runtime.BaseAPI {
 
     /**
      */
-    async powerRangersGetRaw(requestParameters: PowerRangersGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<PorwerRanger>>> {
+    async getManyPowerRangerRaw(requestParameters: GetManyPowerRangerRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<Array<PorwerRanger>>> {
         const queryParameters: any = {};
 
         if (requestParameters.name !== undefined) {
@@ -54,7 +54,7 @@ export class PowerRangersApi extends runtime.BaseAPI {
         }
 
         const response = await this.request({
-            path: `/power-rangers/`,
+            path: `/power-ranger/`,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -65,16 +65,16 @@ export class PowerRangersApi extends runtime.BaseAPI {
 
     /**
      */
-    async powerRangersGet(requestParameters: PowerRangersGetRequest, initOverrides?: RequestInit): Promise<Array<PorwerRanger>> {
-        const response = await this.powerRangersGetRaw(requestParameters, initOverrides);
+    async getManyPowerRanger(requestParameters: GetManyPowerRangerRequest, initOverrides?: RequestInit): Promise<Array<PorwerRanger>> {
+        const response = await this.getManyPowerRangerRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
     /**
      */
-    async powerRangersIdGetRaw(requestParameters: PowerRangersIdGetRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<PorwerRanger>> {
+    async getOnePowerRangerRaw(requestParameters: GetOnePowerRangerRequest, initOverrides?: RequestInit): Promise<runtime.ApiResponse<PorwerRanger>> {
         if (requestParameters.id === null || requestParameters.id === undefined) {
-            throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling powerRangersIdGet.');
+            throw new runtime.RequiredError('id','Required parameter requestParameters.id was null or undefined when calling getOnePowerRanger.');
         }
 
         const queryParameters: any = {};
@@ -86,7 +86,7 @@ export class PowerRangersApi extends runtime.BaseAPI {
         }
 
         const response = await this.request({
-            path: `/power-rangers/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters.id))),
+            path: `/power-ranger/{id}`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters.id))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -97,8 +97,8 @@ export class PowerRangersApi extends runtime.BaseAPI {
 
     /**
      */
-    async powerRangersIdGet(requestParameters: PowerRangersIdGetRequest, initOverrides?: RequestInit): Promise<PorwerRanger> {
-        const response = await this.powerRangersIdGetRaw(requestParameters, initOverrides);
+    async getOnePowerRanger(requestParameters: GetOnePowerRangerRequest, initOverrides?: RequestInit): Promise<PorwerRanger> {
+        const response = await this.getOnePowerRangerRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

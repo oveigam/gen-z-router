@@ -3,7 +3,7 @@ import Controller from "../../config/Controller";
 import { db } from "../../config/mock";
 import { powerRangerSchema } from "./power-ranger.validation";
 
-export const powerRangerController = new Controller({ name: "Power Rangers", basePath: "/power-rangers" });
+export const powerRangerController = new Controller({ name: "Power Ranger", basePath: "/power-ranger" });
 
 export const getAllHandler = powerRangerController.get(
   "/",

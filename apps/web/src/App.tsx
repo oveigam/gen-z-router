@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import reactLogo from "./assets/react.svg";
-import { PowerRangersApi } from "./_api/apis/PowerRangersApi";
+import { PowerRangerApi } from "./_api/apis/PowerRangerApi";
 import { Configuration } from "./_api/runtime";
 import viteLogo from "/vite.svg";
 
-const api = new PowerRangersApi(
+const api = new PowerRangerApi(
   new Configuration({
     basePath: "http://localhost:8000",
   })
@@ -14,7 +14,7 @@ function App() {
   const { data } = useQuery({
     queryKey: ["gogopowerrangers"],
     queryFn: () => {
-      return api.powerRangersGet({});
+      return api.getManyPowerRanger({});
     },
   });
 

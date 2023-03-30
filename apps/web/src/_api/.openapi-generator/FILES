@@ -1,8 +1,8 @@
 .openapi-generator-ignore
-apis/PowerRangersApi.ts
+apis/PowerRangerApi.ts
 apis/index.ts
 index.ts
 models/PorwerRanger.ts
-models/PowerRangersSeasons.ts
+models/PowerRangerSeasons.ts
 models/index.ts
 runtime.ts

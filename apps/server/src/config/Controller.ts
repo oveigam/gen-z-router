@@ -176,7 +176,7 @@ function createRequestHandler<P extends AnyZodObject, Q extends AnyZodObject, B 
  * @param path path del enpoint
  * @returns path de un endpoint en swagger
  */
-function generateSwaggerPath(basePath: string, path: Path) {
+function generateSwaggerPath(basePath: string, path: Path | PathOptions) {
   let swaggerPath = basePath + path;
   if (swaggerPath.includes(":")) {
     const subPaths = swaggerPath.split("/");
@@ -194,11 +194,12 @@ function generateSwaggerPath(basePath: string, path: Path) {
 }
 
 function registerDocs(params: {
-  path: Path;
+  path: Path | PathOptions;
   method: Method;
   validation: ValidationSchema<AnyZodObject, AnyZodObject, AnyZodObject, Schema>;
   responseStatus?: number;
   options: ControllerOptions;
+  operationId: string;
 }) {
   const {
     path,
@@ -206,6 +207,7 @@ function registerDocs(params: {
     validation: { response, ...input },
     responseStatus = 200,
     options,
+    operationId,
   } = params;
 
   // Registro de schemas (solo nos interesan los cuerpos)
@@ -219,7 +221,7 @@ function registerDocs(params: {
     method,
     tags: [options.name],
     path: generateSwaggerPath(options.basePath, path),
-    // operationId: // TODO pasarle o generar el operationId (lo usa el open api client generator para nombrar las funciones),
+    operationId,
     security: [{ [openapiAuth.name]: [] }],
     request: {
       ...input,
@@ -247,6 +249,33 @@ function registerDocs(params: {
   });
 }
 
+function generateOperationId(params: { path: Path; method: Method; routerName: string }) {
+  const { path, method, routerName } = params;
+  let operationId = "";
+
+  switch (method) {
+    case "get":
+      if (path.length > 1) {
+        operationId += "getOne";
+      } else {
+        operationId += "getMany";
+      }
+      break;
+    case "post":
+      operationId += "create";
+      break;
+    case "put":
+    case "patch":
+      operationId += "update";
+      break;
+    case "delete":
+      operationId += "delete";
+      break;
+  }
+
+  return operationId + routerName.split(" ").join("");
+}
+
 const schemaRegistry = new Map<Schema, boolean>();
 function registerSchema(schema: Schema) {
   if (!schemaRegistry.get(schema) && schema._def.openapi) {
@@ -255,6 +284,10 @@ function registerSchema(schema: Schema) {
 }
 
 type Path = Exclude<`/${string}`, `${string}/`>;
+type PathOptions = {
+  path: Path;
+  operationId: string;
+};
 type Method = "get" | "post" | "put" | "patch" | "delete";
 
 type ControllerOptions = {
@@ -272,78 +305,116 @@ class Controller {
   }
 
   get<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
-    path: Path,
+    path: Path | PathOptions,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
+    const routePath = typeof path === "string" ? path : path.path;
+    const operationId =
+      typeof path === "string"
+        ? generateOperationId({ path, method: "get", routerName: this.options.name })
+        : path.operationId;
     registerDocs({
       method: "get",
       options: this.options,
       path,
       validation,
+      operationId,
     });
-    this.$router.get(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
+    this.$router.get(routePath, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
     return controllerFn;
   }
 
   post<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
-    path: Path,
+    path: Path | PathOptions,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
+    const routePath = typeof path === "string" ? path : path.path;
+    const operationId =
+      typeof path === "string"
+        ? generateOperationId({ path, method: "post", routerName: this.options.name })
+        : path.operationId;
     registerDocs({
       path,
       method: "post",
       validation,
       responseStatus: 201,
       options: this.options,
+      operationId,
     });
-    this.$router.post(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response, 201));
+    this.$router.post(
+      routePath,
+      inputMiddleware(validation),
+      createRequestHandler(controllerFn, validation.response, 201)
+    );
     return controllerFn;
   }
 
   put<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
-    path: Path,
+    path: Path | PathOptions,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
+    const routePath = typeof path === "string" ? path : path.path;
+    const operationId =
+      typeof path === "string"
+        ? generateOperationId({ path, method: "put", routerName: this.options.name })
+        : path.operationId;
     registerDocs({
       path,
       method: "put",
       validation,
       options: this.options,
+      operationId,
     });
-    this.$router.put(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
+    this.$router.put(routePath, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
     return controllerFn;
   }
 
   patch<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
-    path: Path,
+    path: Path | PathOptions,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
+    const routePath = typeof path === "string" ? path : path.path;
+    const operationId =
+      typeof path === "string"
+        ? generateOperationId({ path, method: "patch", routerName: this.options.name })
+        : path.operationId;
     registerDocs({
       path,
       method: "patch",
       validation,
       options: this.options,
+      operationId,
     });
-    this.$router.patch(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
+    this.$router.patch(routePath, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
     return controllerFn;
   }
 
   delete<P extends AnyZodObject, Q extends AnyZodObject, B extends AnyZodObject, R extends Schema>(
-    path: Path,
+    path: Path | PathOptions,
     validation: ValidationSchema<P, Q, B, R>,
     controllerFn: (input: Input<P, Q, B>) => Promise<z.infer<R>>
   ) {
+    const routePath = typeof path === "string" ? path : path.path;
+    const operationId =
+      typeof path === "string"
+        ? generateOperationId({ path, method: "delete", routerName: this.options.name })
+        : path.operationId;
     registerDocs({
       path,
       method: "delete",
       validation,
       options: this.options,
+      operationId,
     });
-    this.$router.delete(path, inputMiddleware(validation), createRequestHandler(controllerFn, validation.response));
+    this.$router.delete(
+      routePath,
+      inputMiddleware(validation),
+      createRequestHandler(controllerFn, validation.response)
+    );
     return controllerFn;
   }
 }

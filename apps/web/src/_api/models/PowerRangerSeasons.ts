@@ -16,28 +16,28 @@ import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface PowerRangersSeasons
+ * @interface PowerRangerSeasons
  */
-export interface PowerRangersSeasons {
+export interface PowerRangerSeasons {
     /**
      * 
      * @type {string}
-     * @memberof PowerRangersSeasons
+     * @memberof PowerRangerSeasons
      */
-    season: PowerRangersSeasonsSeasonEnum;
+    season: PowerRangerSeasonsSeasonEnum;
     /**
      * 
      * @type {string}
-     * @memberof PowerRangersSeasons
+     * @memberof PowerRangerSeasons
      */
-    color: PowerRangersSeasonsColorEnum;
+    color: PowerRangerSeasonsColorEnum;
 }
 
 /**
 * @export
 * @enum {string}
 */
-export enum PowerRangersSeasonsSeasonEnum {
+export enum PowerRangerSeasonsSeasonEnum {
     _1 = '1',
     _2 = '2',
     _3 = '3',
@@ -46,7 +46,7 @@ export enum PowerRangersSeasonsSeasonEnum {
 * @export
 * @enum {string}
 */
-export enum PowerRangersSeasonsColorEnum {
+export enum PowerRangerSeasonsColorEnum {
     red = 'red',
     yellow = 'yellow',
     black = 'black',
@@ -57,11 +57,11 @@ export enum PowerRangersSeasonsColorEnum {
     gold = 'gold'
 }
 
-export function PowerRangersSeasonsFromJSON(json: any): PowerRangersSeasons {
-    return PowerRangersSeasonsFromJSONTyped(json, false);
+export function PowerRangerSeasonsFromJSON(json: any): PowerRangerSeasons {
+    return PowerRangerSeasonsFromJSONTyped(json, false);
 }
 
-export function PowerRangersSeasonsFromJSONTyped(json: any, ignoreDiscriminator: boolean): PowerRangersSeasons {
+export function PowerRangerSeasonsFromJSONTyped(json: any, ignoreDiscriminator: boolean): PowerRangerSeasons {
     if ((json === undefined) || (json === null)) {
         return json;
     }
@@ -72,7 +72,7 @@ export function PowerRangersSeasonsFromJSONTyped(json: any, ignoreDiscriminator:
     };
 }
 
-export function PowerRangersSeasonsToJSON(value?: PowerRangersSeasons | null): any {
+export function PowerRangerSeasonsToJSON(value?: PowerRangerSeasons | null): any {
     if (value === undefined) {
         return undefined;
     }

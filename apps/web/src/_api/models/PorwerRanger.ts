@@ -14,10 +14,10 @@
 
 import { exists, mapValues } from '../runtime';
 import {
-    PowerRangersSeasons,
-    PowerRangersSeasonsFromJSON,
-    PowerRangersSeasonsFromJSONTyped,
-    PowerRangersSeasonsToJSON,
+    PowerRangerSeasons,
+    PowerRangerSeasonsFromJSON,
+    PowerRangerSeasonsFromJSONTyped,
+    PowerRangerSeasonsToJSON,
 } from './';
 
 /**
@@ -40,10 +40,10 @@ export interface PorwerRanger {
     name: string;
     /**
      * 
-     * @type {Array<PowerRangersSeasons>}
+     * @type {Array<PowerRangerSeasons>}
      * @memberof PorwerRanger
      */
-    seasons: Array<PowerRangersSeasons>;
+    seasons: Array<PowerRangerSeasons>;
 }
 
 export function PorwerRangerFromJSON(json: any): PorwerRanger {
@@ -58,7 +58,7 @@ export function PorwerRangerFromJSONTyped(json: any, ignoreDiscriminator: boolea
         
         'id': json['id'],
         'name': json['name'],
-        'seasons': ((json['seasons'] as Array<any>).map(PowerRangersSeasonsFromJSON)),
+        'seasons': ((json['seasons'] as Array<any>).map(PowerRangerSeasonsFromJSON)),
     };
 }
 
@@ -73,7 +73,7 @@ export function PorwerRangerToJSON(value?: PorwerRanger | null): any {
         
         'id': value.id,
         'name': value.name,
-        'seasons': ((value.seasons as Array<any>).map(PowerRangersSeasonsToJSON)),
+        'seasons': ((value.seasons as Array<any>).map(PowerRangerSeasonsToJSON)),
     };
 }
 
