@@ -1,11 +1,11 @@
 import { z } from "zod";
-import Controller from "../../config/Controller";
+import GenZRouter from "../../config/GenZRouter";
 import { db } from "../../config/mock";
 import { powerRangerSchema } from "./power-ranger.validation";
 
-export const powerRangerController = new Controller({ name: "Power Ranger", basePath: "/power-ranger" });
+export const powerRangerRouter = new GenZRouter({ name: "Power Ranger", basePath: "/power-ranger" });
 
-export const getAllHandler = powerRangerController.get(
+export const getAllHandler = powerRangerRouter.get(
   "/",
   {
     query: z.object({ name: z.string().optional(), seasons: z.number().array().optional() }),
@@ -20,7 +20,7 @@ export const getAllHandler = powerRangerController.get(
   }
 );
 
-export const getOneHandler = powerRangerController.get(
+export const getOneHandler = powerRangerRouter.get(
   "/:id",
   {
     params: z.object({ id: z.number() }),

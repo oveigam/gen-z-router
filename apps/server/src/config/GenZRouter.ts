@@ -198,7 +198,7 @@ function registerDocs(params: {
   method: Method;
   validation: ValidationSchema<AnyZodObject, AnyZodObject, AnyZodObject, Schema>;
   responseStatus?: number;
-  options: ControllerOptions;
+  options: Options;
   operationId: string;
 }) {
   const {
@@ -290,16 +290,16 @@ type PathOptions = {
 };
 type Method = "get" | "post" | "put" | "patch" | "delete";
 
-type ControllerOptions = {
+type Options = {
   name: string;
   basePath: Path;
 };
 
-class Controller {
+class GenZRouter {
   $router: Router;
-  options: ControllerOptions;
+  options: Options;
 
-  constructor(options: ControllerOptions) {
+  constructor(options: Options) {
     this.$router = Router();
     this.options = options;
   }
@@ -419,4 +419,4 @@ class Controller {
   }
 }
 
-export default Controller;
+export default GenZRouter;
